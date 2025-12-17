@@ -31,7 +31,7 @@ document.addEventListener('keydown', function(e) {
     }
 });
 let devtools = {open: false, orientation: null};
-const threshold = 320; // raised to avoid mobile false positives
+const threshold = 320; // avoid mobile false positives
 if (!isIOS) {
     setInterval(function() {
         if (window.outerHeight - window.innerHeight > threshold || window.outerWidth - window.innerWidth > threshold) {
@@ -237,43 +237,69 @@ const PurchasePopup = {
     }
 };
 
-// ===== ITEM SELECTION =====
-$(document).ready(function() {
+// ===== ITEM SELECTION (supports jQuery if present; otherwise vanilla) =====
+function initSelection() {
     const MAX_SELECTIONS = CONFIG.MAX_SELECTIONS;
-    const $limitMessage = $('#selection-limit-message');
-    const $continueBtn = $('#continue-btn');
+    const limitMessage = document.getElementById('selection-limit-message');
+    const continueBtn = document.getElementById('continue-btn');
 
-    $('.item-card').on('click', function() {
-        const $this = $(this);
-        const isSelected = $this.hasClass('selected');
-        const selectedCount = $('.item-card.selected').length;
-        $limitMessage.hide();
-        if (isSelected) {
-            $this.removeClass('selected');
+    const handleCardClick = (card) => {
+        const selected = card.classList.contains('selected');
+        const selectedCount = document.querySelectorAll('.item-card.selected').length;
+        if (limitMessage) limitMessage.style.display = 'none';
+
+        if (selected) {
+            card.classList.remove('selected');
         } else {
             if (selectedCount < MAX_SELECTIONS) {
-                $this.addClass('selected');
+                card.classList.add('selected');
                 Utils.playSound('dingSound');
             } else {
-                $limitMessage.show();
-                setTimeout(() => { $limitMessage.fadeOut(); }, 2500);
+                if (limitMessage) {
+                    limitMessage.style.display = 'block';
+                    setTimeout(() => { limitMessage.style.display = 'none'; }, 2500);
+                }
             }
         }
-        if ($('.item-card.selected').length > 0) {
-            $continueBtn.show();
-        } else {
-            $continueBtn.hide();
-        }
-    });
 
-    $('#continue-btn').on('click', function() {
-        const selectedItems = $('.item-card.selected');
-        if (selectedItems.length === 0) return;
-        const itemNames = selectedItems.map(function() { return $(this).find('.item-name').text().trim(); }).get().join(', ');
-        const itemImages = selectedItems.map(function() { return $(this).find('.item-img').attr('src'); }).get();
-        PurchasePopup.show(itemNames, itemImages);
-    });
-});
+        const hasSelection = document.querySelectorAll('.item-card.selected').length > 0;
+        if (continueBtn) continueBtn.style.display = hasSelection ? 'block' : 'none';
+    };
+
+    // If jQuery available, use it; otherwise vanilla
+    if (window.jQuery) {
+        $('.item-card').off('click').on('click', function() {
+            handleCardClick(this);
+        });
+        $('#continue-btn').off('click').on('click', function() {
+            const selectedItems = document.querySelectorAll('.item-card.selected');
+            if (!selectedItems.length) return;
+            const itemNames = Array.from(selectedItems).map(el => el.querySelector('.item-name').textContent.trim()).join(', ');
+            const itemImages = Array.from(selectedItems).map(el => el.querySelector('.item-img').getAttribute('src'));
+            PurchasePopup.show(itemNames, itemImages);
+        });
+    } else {
+        document.querySelectorAll('.item-card').forEach(card => {
+            card.addEventListener('click', () => handleCardClick(card));
+        });
+        if (continueBtn) {
+            continueBtn.addEventListener('click', () => {
+                const selectedItems = document.querySelectorAll('.item-card.selected');
+                if (!selectedItems.length) return;
+                const itemNames = Array.from(selectedItems).map(el => el.querySelector('.item-name').textContent.trim()).join(', ');
+                const itemImages = Array.from(selectedItems).map(el => el.querySelector('.item-img').getAttribute('src'));
+                PurchasePopup.show(itemNames, itemImages);
+            });
+        }
+    }
+}
+
+// ===== INIT =====
+function ready(fn) {
+    if (document.readyState !== 'loading') fn();
+    else document.addEventListener('DOMContentLoaded', fn);
+}
+ready(initSelection);
 
 // ===== GLOBAL FUNCTIONS FOR HTML ONCLICK =====
 function closeLocker() { LockerSystem.close(); }
