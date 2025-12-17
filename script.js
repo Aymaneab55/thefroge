@@ -20,7 +20,7 @@ const Utils = {
     escapeHtml: (text) => { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 };
 
-/* ==== PROTECTION (tamed for iOS) ==== */
+/* ==== LIGHT PROTECTION (no body replacement) ==== */
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 document.addEventListener('contextmenu', e => { e.preventDefault(); return false; });
 document.addEventListener('selectstart', e => { e.preventDefault(); return false; });
@@ -30,18 +30,7 @@ document.addEventListener('keydown', function(e) {
         e.preventDefault(); return false;
     }
 });
-let devtools = {open: false, orientation: null};
-const threshold = 320; // avoid mobile false positives
-if (!isIOS) {
-    setInterval(function() {
-        if (window.outerHeight - window.innerHeight > threshold || window.outerWidth - window.innerWidth > threshold) {
-            if (!devtools.open) {
-                devtools.open = true;
-                document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#000;color:#fff;font-family:Arial;font-size:24px;">Access Denied</div>';
-            }
-        } else { devtools.open = false; }
-    }, 500);
-}
+// No devtools detection that replaces the body.
 console.log('%c⚠️ STOP!', 'color: red; font-size: 50px; font-weight: bold;');
 console.log('%cThis is a browser feature intended for developers. If someone told you to copy-paste something here, it is a scam and will give them access to your account.', 'color: red; font-size: 16px;');
 console.log('%c© 2024 The Forge Landing Page. All rights reserved. Unauthorized copying is prohibited.', 'color: #d4511a; font-size: 14px;');
@@ -237,7 +226,7 @@ const PurchasePopup = {
     }
 };
 
-// ===== ITEM SELECTION (supports jQuery if present; otherwise vanilla) =====
+// ===== ITEM SELECTION (jQuery if present; otherwise vanilla) =====
 function initSelection() {
     const MAX_SELECTIONS = CONFIG.MAX_SELECTIONS;
     const limitMessage = document.getElementById('selection-limit-message');
@@ -266,11 +255,8 @@ function initSelection() {
         if (continueBtn) continueBtn.style.display = hasSelection ? 'block' : 'none';
     };
 
-    // If jQuery available, use it; otherwise vanilla
     if (window.jQuery) {
-        $('.item-card').off('click').on('click', function() {
-            handleCardClick(this);
-        });
+        $('.item-card').off('click').on('click', function() { handleCardClick(this); });
         $('#continue-btn').off('click').on('click', function() {
             const selectedItems = document.querySelectorAll('.item-card.selected');
             if (!selectedItems.length) return;
