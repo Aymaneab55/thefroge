@@ -20,25 +20,16 @@ const Utils = {
     escapeHtml: (text) => { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 };
 
-/* ==== LIGHT PROTECTION (no body replacement) ==== */
+/* ==== LIGHT PROTECTION ==== */
 document.addEventListener('contextmenu', e => { e.preventDefault(); return false; });
 document.addEventListener('keydown', function(e) {
     if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'U')) {
         e.preventDefault(); return false;
     }
 });
-// Removed selectstart/dragstart preventions to avoid blocking taps.
 console.log('%c⚠️ STOP!', 'color: red; font-size: 50px; font-weight: bold;');
 console.log('%cThis is a browser feature intended for developers. If someone told you to copy-paste something here, it is a scam and will give them access to your account.', 'color: red; font-size: 16px;');
 console.log('%c© 2024 The Forge Landing Page. All rights reserved. Unauthorized copying is prohibited.', 'color: #d4511a; font-size: 14px;');
-
-document.addEventListener('touchstart', function(event) { if (event.touches.length > 1) { event.preventDefault(); } }, { passive: false });
-let lastTouchEnd = 0;
-document.addEventListener('touchend', function(event) {
-    const now = Date.now();
-    if (now - lastTouchEnd <= 300) { event.preventDefault(); }
-    lastTouchEnd = now;
-}, false);
 
 // ===== ACTIVE USERS =====
 function updateActiveUsers() {
@@ -223,7 +214,7 @@ const PurchasePopup = {
     }
 };
 
-// ===== ITEM SELECTION (click + touchend; jQuery if present; otherwise vanilla) =====
+// ===== ITEM SELECTION (pointerup with movement guard; jQuery if present else vanilla) =====
 function initSelection() {
     const MAX_SELECTIONS = CONFIG.MAX_SELECTIONS;
     const limitMessage = document.getElementById('selection-limit-message');
@@ -252,31 +243,17 @@ function initSelection() {
         if (continueBtn) continueBtn.style.display = hasSelection ? 'block' : 'none';
     };
 
-    const bindCard = (card) => {
-        // prevent duplicate double-trigger
-        let touchHandled = false;
-        card.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            touchHandled = true;
-            handleCardClick(card);
-        }, { passive: false });
-        card.addEventListener('click', (e) => {
-            // if touch triggered, skip the immediate next click
-            if (touchHandled) { touchHandled = false; return; }
-            handleCardClick(card);
+    const bindWithGuard = (el, onActivate) => {
+        let startX = 0, startY = 0, moved = false;
+        el.addEventListener('pointerdown', (e) => {
+            startX = e.clientX; startY = e.clientY; moved = false;
         });
-    };
-
-    const bindContinue = (btn) => {
-        let touchHandled = false;
-        btn.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            touchHandled = true;
-            triggerContinue();
-        }, { passive: false });
-        btn.addEventListener('click', (e) => {
-            if (touchHandled) { touchHandled = false; return; }
-            triggerContinue();
+        el.addEventListener('pointermove', (e) => {
+            if (Math.abs(e.clientX - startX) > 12 || Math.abs(e.clientY - startY) > 12) moved = true;
+        });
+        el.addEventListener('pointerup', (e) => {
+            if (moved) return;
+            onActivate(e);
         });
     };
 
@@ -289,17 +266,12 @@ function initSelection() {
     };
 
     if (window.jQuery) {
-        $('.item-card').off('click touchend').on('click touchend', function(e) {
-            if (e.type === 'touchend') e.preventDefault();
-            handleCardClick(this);
-        });
-        $('#continue-btn').off('click touchend').on('click touchend', function(e) {
-            if (e.type === 'touchend') e.preventDefault();
-            triggerContinue();
-        });
+        // use pointerup guard via vanilla, then jQuery for continue
+        document.querySelectorAll('.item-card').forEach(el => bindWithGuard(el, () => handleCardClick(el)));
+        $('#continue-btn').off('click').on('click', triggerContinue);
     } else {
-        document.querySelectorAll('.item-card').forEach(bindCard);
-        if (continueBtn) bindContinue(continueBtn);
+        document.querySelectorAll('.item-card').forEach(el => bindWithGuard(el, () => handleCardClick(el)));
+        if (continueBtn) bindWithGuard(continueBtn, triggerContinue);
     }
 }
 
