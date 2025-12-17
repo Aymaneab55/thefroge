@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="Get free The Forge items instantly! Select your favorite items and unlock them for free.">
+    <meta name="theme-color" content="#d4511a">
+    <title>The Forge - Free Items Generator</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@900&family=Orbitron:wght@900&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<div class="page">
+    <header class="hero">
+        <div class="brand">
+            <img src="https://i.postimg.cc/XNFGtrgz/no-Filter.webp" alt="The Forge Logo" id="header-logo">
+            <div class="brand-title">
+                <h1>The Forge — Money</h1>
+                <p>Instantly forge millions of Coins with your visual flow. Select your race and wealth level to begin the simulation.</p>
+            </div>
+        </div>
+        <div class="hero-actions">
+            <button class="btn btn-primary">✦ Start Forging</button>
+            <button class="btn btn-ghost">How it works</button>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span id="activeUsersCount">4,150 Smiths Online</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Section 1: Money -->
+    <section class="section">
+        <h2>1. Select Money Amount</h2>
+        <small>Choose your desired wealth</small>
+        <div class="card-row">
+            <div class="items-grid" id="moneyGrid">
+                <div class="item-card">
+                    <img class="item-img" alt="$5 Millions" src="https://i.postimg.cc/W1TmM2jZ/Screenshot_2025_12_16_022215.png">
+                    <div class="item-name">$5 Millions</div>
+                </div>
+                <div class="item-card">
+                    <span class="pill">BEST VALUE</span>
+                    <img class="item-img" alt="$10 Millions" src="https://i.postimg.cc/W1TmM2jZ/Screenshot_2025_12_16_022215.png">
+                    <div class="item-name">$10 Millions</div>
+                </div>
+                <div class="item-card">
+                    <img class="item-img" alt="$25 Millions" src="https://i.postimg.cc/W1TmM2jZ/Screenshot_2025_12_16_022215.png">
+                    <div class="item-name">$25 Millions</div>
+                </div>
+                <div class="item-card">
+                    <img class="item-img" alt="$50 Millions" src="https://i.postimg.cc/W1TmM2jZ/Screenshot_2025_12_16_022215.png">
+                    <div class="item-name">$50 Millions</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: Race -->
+    <section class="section">
+        <h2>2. Select Your Desired Race</h2>
+        <small>Choose one class</small>
+        <div class="card-row">
+            <div class="items-grid" id="itemsGrid">
+                <div class="item-card">
+                    <img alt="Angel" class="item-img" src="https://i.postimg.cc/6QvtTvTn/angel-race-the-forge.webp" />
+                    <div class="item-name">Angel</div>
+                </div>
+                <div class="item-card">
+                    <img alt="Demon" class="item-img" src="https://i.postimg.cc/4dpf29gT/demon-race-the-forge.webp" />
+                    <div class="item-name">Demon</div>
+                </div>
+                <div class="item-card">
+                    <img alt="Golem" class="item-img" src="https://i.postimg.cc/s2nbk6K6/Golem.webp" />
+                    <div class="item-name">Golem</div>
+                </div>
+                <div class="item-card">
+                    <img alt="Dragonborn" class="item-img" src="https://i.postimg.cc/Gt65TMq0/Dragonborn.webp" />
+                    <div class="item-name">Dragonborn</div>
+                </div>
+                <div class="item-card">
+                    <img alt="Minotaur" class="item-img" src="https://i.postimg.cc/cJ9y4cyx/Minotaur.webp" />
+                    <div class="item-name">Minotaur</div>
+                </div>
+                <div class="item-card">
+                    <img alt="Shadow" class="item-img" src="https://i.postimg.cc/Zqq2gy9D/Shadow.webp" />
+                    <div class="item-name">Shadow</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="selection-controls">
+        <div id="selection-limit-message">You can only select up to 3 items.</div>
+    </div>
+    <div class="selection-controls">
+        <button id="continue-btn">Continue →</button>
+    </div>
+
+    <footer>
+        <p>© 2024 The Forge Landing Page. All rights reserved.</p>
+        <p>Unauthorized copying or distribution is prohibited.</p>
+    </footer>
+</div>
+
+<!-- PURCHASE POPUP -->
+<div class="purchase-popup" id="purchase-popup">
+    <div class="popup-content"></div>
+</div>
+
+<!-- LOCKER OVERLAY (unchanged logic) -->
+<div id="locker" class="locker-overlay">
+    <div class="locker-box">
+        <span class="close-btn" onclick="closeLocker()" aria-label="Close">×</span>
+        <div class="selected-items-preview" id="selectedItemsPreview"></div>
+        <h2 class="game-title">The Forge</h2>
+        <div class="secure-badge">
+            <i class="fas fa-shield-alt"></i>
+            <span>Secure items From Bots</span>
+        </div>
+        <p class="instruction-text">
+            Choose one of offer in the list below. Complete the task and your items will be claimed <span class="highlight">automatically</span>.
+        </p>
+        <div class="note-box">
+            <strong>NOTE:</strong>
+            <p>if an offer doesn't open, try another. Complete Offer Exactly To make sur Received your items .</p>
+        </div>
+        <div class="offers-prompt">Choose an offer below:</div>
+        <div class="offers-list" id="offersList">
+            <div style="color: #fff; text-align: center; padding: 15px; font-size: 0.75em;">Loading offers...</div>
+        </div>
+    </div>
+</div>
+
+<audio id="dingSound" preload="auto">
+    <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_63c49c13c8.mp3" type="audio/mpeg">
+</audio>
+<audio id="clickSound" preload="auto">
+    <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_63c49c13c8.mp3" type="audio/mpeg">
+</audio>
+
+<script src="./script.js"></script>
+</body>
+</html>
