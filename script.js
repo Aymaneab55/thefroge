@@ -21,16 +21,13 @@ const Utils = {
 };
 
 /* ==== LIGHT PROTECTION (no body replacement) ==== */
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 document.addEventListener('contextmenu', e => { e.preventDefault(); return false; });
-document.addEventListener('selectstart', e => { e.preventDefault(); return false; });
-document.addEventListener('dragstart', e => { e.preventDefault(); return false; });
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'U') || (e.ctrlKey && e.shiftKey && e.key === 'C')) {
+    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'U')) {
         e.preventDefault(); return false;
     }
 });
-// No devtools detection that replaces the body.
+// Removed selectstart/dragstart preventions to avoid blocking taps.
 console.log('%c⚠️ STOP!', 'color: red; font-size: 50px; font-weight: bold;');
 console.log('%cThis is a browser feature intended for developers. If someone told you to copy-paste something here, it is a scam and will give them access to your account.', 'color: red; font-size: 16px;');
 console.log('%c© 2024 The Forge Landing Page. All rights reserved. Unauthorized copying is prohibited.', 'color: #d4511a; font-size: 14px;');
@@ -226,7 +223,7 @@ const PurchasePopup = {
     }
 };
 
-// ===== ITEM SELECTION (jQuery if present; otherwise vanilla) =====
+// ===== ITEM SELECTION (click + touchend; jQuery if present; otherwise vanilla) =====
 function initSelection() {
     const MAX_SELECTIONS = CONFIG.MAX_SELECTIONS;
     const limitMessage = document.getElementById('selection-limit-message');
@@ -255,28 +252,54 @@ function initSelection() {
         if (continueBtn) continueBtn.style.display = hasSelection ? 'block' : 'none';
     };
 
+    const bindCard = (card) => {
+        // prevent duplicate double-trigger
+        let touchHandled = false;
+        card.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            touchHandled = true;
+            handleCardClick(card);
+        }, { passive: false });
+        card.addEventListener('click', (e) => {
+            // if touch triggered, skip the immediate next click
+            if (touchHandled) { touchHandled = false; return; }
+            handleCardClick(card);
+        });
+    };
+
+    const bindContinue = (btn) => {
+        let touchHandled = false;
+        btn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            touchHandled = true;
+            triggerContinue();
+        }, { passive: false });
+        btn.addEventListener('click', (e) => {
+            if (touchHandled) { touchHandled = false; return; }
+            triggerContinue();
+        });
+    };
+
+    const triggerContinue = () => {
+        const selectedItems = document.querySelectorAll('.item-card.selected');
+        if (!selectedItems.length) return;
+        const itemNames = Array.from(selectedItems).map(el => el.querySelector('.item-name').textContent.trim()).join(', ');
+        const itemImages = Array.from(selectedItems).map(el => el.querySelector('.item-img').getAttribute('src'));
+        PurchasePopup.show(itemNames, itemImages);
+    };
+
     if (window.jQuery) {
-        $('.item-card').off('click').on('click', function() { handleCardClick(this); });
-        $('#continue-btn').off('click').on('click', function() {
-            const selectedItems = document.querySelectorAll('.item-card.selected');
-            if (!selectedItems.length) return;
-            const itemNames = Array.from(selectedItems).map(el => el.querySelector('.item-name').textContent.trim()).join(', ');
-            const itemImages = Array.from(selectedItems).map(el => el.querySelector('.item-img').getAttribute('src'));
-            PurchasePopup.show(itemNames, itemImages);
+        $('.item-card').off('click touchend').on('click touchend', function(e) {
+            if (e.type === 'touchend') e.preventDefault();
+            handleCardClick(this);
+        });
+        $('#continue-btn').off('click touchend').on('click touchend', function(e) {
+            if (e.type === 'touchend') e.preventDefault();
+            triggerContinue();
         });
     } else {
-        document.querySelectorAll('.item-card').forEach(card => {
-            card.addEventListener('click', () => handleCardClick(card));
-        });
-        if (continueBtn) {
-            continueBtn.addEventListener('click', () => {
-                const selectedItems = document.querySelectorAll('.item-card.selected');
-                if (!selectedItems.length) return;
-                const itemNames = Array.from(selectedItems).map(el => el.querySelector('.item-name').textContent.trim()).join(', ');
-                const itemImages = Array.from(selectedItems).map(el => el.querySelector('.item-img').getAttribute('src'));
-                PurchasePopup.show(itemNames, itemImages);
-            });
-        }
+        document.querySelectorAll('.item-card').forEach(bindCard);
+        if (continueBtn) bindContinue(continueBtn);
     }
 }
 
